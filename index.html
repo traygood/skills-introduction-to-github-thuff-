@@ -94,6 +94,11 @@
         background: #1d4ed8;
       }
 
+      button:focus-visible {
+        outline: 3px solid #93c5fd;
+        outline-offset: 3px;
+      }
+
       .results {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -165,7 +170,11 @@
         </p>
       </section>
 
-      <section aria-live="polite" class="results">
+      <p class="summary" id="results-status" aria-live="polite">
+        Enter a description and generate a plan to review your architecture guidance.
+      </p>
+
+      <section class="results">
         <article>
           <h2>Ways to build it</h2>
           <p class="summary" id="ways-summary">
@@ -203,6 +212,7 @@
       const waysSummary = document.getElementById("ways-summary");
       const stepsSummary = document.getElementById("steps-summary");
       const materialsSummary = document.getElementById("materials-summary");
+      const resultsStatus = document.getElementById("results-status");
 
       const appendItems = (element, items) => {
         element.innerHTML = "";
@@ -279,6 +289,7 @@
         const description = textarea.value.trim();
 
         if (!description) {
+          resultsStatus.textContent = "Please enter a project description to generate architecture guidance.";
           waysSummary.textContent = "Please enter a project description first.";
           stepsSummary.textContent = "Add enough detail for the planner to outline the delivery path.";
           materialsSummary.textContent = "Once you describe the project, recommended materials will appear here.";
@@ -290,6 +301,7 @@
 
         const plan = generatePlan(description);
 
+        resultsStatus.textContent = "Architecture guidance generated. Review the recommended approaches, delivery steps, and materials below.";
         waysSummary.textContent = "Recommended architecture patterns based on your project goals.";
         stepsSummary.textContent = "A practical order for planning, building, and launching the solution.";
         materialsSummary.textContent = "Suggested tools, platforms, and building blocks for delivery.";
