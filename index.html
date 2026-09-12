@@ -225,11 +225,24 @@
       };
 
       const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const isAlphaNumeric = (value) => /^[a-z0-9]+$/.test(value);
+      const buildKeywordPattern = (word) =>
+        word
+          .match(/[a-z0-9]+|[^a-z0-9]+/g)
+          .map((part, index, parts) => {
+            const isInternalSeparator =
+              !isAlphaNumeric(part) &&
+              index > 0 &&
+              index < parts.length - 1 &&
+              isAlphaNumeric(parts[index - 1]) &&
+              isAlphaNumeric(parts[index + 1]);
+
+            return isInternalSeparator ? "[^a-z0-9]+" : escapeRegExp(part);
+          })
+          .join("");
       const includesAny = (text, words) =>
         words.some((word) => {
-          const pattern = new RegExp(
-            `(?:^|[^a-z0-9])${escapeRegExp(word).replace(/\\ /g, "\\s+")}(?=$|[^a-z0-9])`
-          );
+          const pattern = new RegExp(`(?:^|[^a-z0-9])${buildKeywordPattern(word)}(?=$|[^a-z0-9])`);
           return pattern.test(text);
         });
 
