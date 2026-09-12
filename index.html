@@ -240,11 +240,19 @@
             return isInternalSeparator ? "[^a-z0-9]+" : escapeRegExp(part);
           })
           .join("");
+      const keywordMatchers = new Map();
+      const getKeywordMatcher = (word) => {
+        if (!keywordMatchers.has(word)) {
+          keywordMatchers.set(
+            word,
+            new RegExp(`(?:^|[^a-z0-9])${buildKeywordPattern(word)}(?=$|[^a-z0-9])`)
+          );
+        }
+
+        return keywordMatchers.get(word);
+      };
       const includesAny = (text, words) =>
-        words.some((word) => {
-          const pattern = new RegExp(`(?:^|[^a-z0-9])${buildKeywordPattern(word)}(?=$|[^a-z0-9])`);
-          return pattern.test(text);
-        });
+        words.some((word) => getKeywordMatcher(word).test(text));
 
       const generatePlan = (description) => {
         const text = description.trim().toLowerCase();
