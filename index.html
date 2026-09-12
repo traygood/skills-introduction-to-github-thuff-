@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Architecture Design Planner</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: Arial, Helvetica, sans-serif;
+        --bg: #f4f7fb;
+        --card: #ffffff;
+        --border: #d8e0ea;
+        --text: #1f2937;
+        --muted: #4b5563;
+        --accent: #2563eb;
+        --accent-soft: #dbeafe;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+      }
+
+      main {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 32px 20px 48px;
+      }
+
+      .hero,
+      .panel,
+      .results article {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+      }
+
+      .hero {
+        padding: 32px;
+        margin-bottom: 24px;
+      }
+
+      h1,
+      h2 {
+        margin-top: 0;
+      }
+
+      .hero p,
+      .hint,
+      .summary {
+        color: var(--muted);
+      }
+
+      .panel {
+        padding: 24px;
+      }
+
+      label {
+        display: block;
+        font-weight: 700;
+        margin-bottom: 10px;
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 160px;
+        resize: vertical;
+        padding: 16px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        font: inherit;
+      }
+
+      button {
+        margin-top: 16px;
+        background: var(--accent);
+        color: #fff;
+        border: 0;
+        border-radius: 999px;
+        padding: 12px 20px;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background: #1d4ed8;
+      }
+
+      button:focus-visible {
+        outline: 3px solid #93c5fd;
+        outline-offset: 3px;
+      }
+
+      .results {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 18px;
+        margin-top: 24px;
+      }
+
+      .results article {
+        padding: 20px;
+      }
+
+      .results h2 {
+        font-size: 1.05rem;
+      }
+
+      ul {
+        margin: 0;
+        padding-left: 20px;
+      }
+
+      li + li {
+        margin-top: 10px;
+      }
+
+      .tag-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 18px;
+      }
+
+      .tag {
+        background: var(--accent-soft);
+        color: var(--accent);
+        border-radius: 999px;
+        padding: 8px 12px;
+        font-size: 0.9rem;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="hero">
+        <h1>Architecture Design Planner</h1>
+        <p>
+          Describe the product you want to build, the users you expect, and any
+          priorities like cost, security, speed, or integrations. The planner
+          will suggest architecture options, a delivery path, and practical
+          materials to use.
+        </p>
+        <div class="tag-list">
+          <span class="tag">Architecture options</span>
+          <span class="tag">Implementation steps</span>
+          <span class="tag">Recommended materials</span>
+        </div>
+      </section>
+
+      <section class="panel">
+        <label for="project-description">Project description</label>
+        <textarea
+          id="project-description"
+          placeholder="Example: I need a secure scheduling app for schools with mobile access, real-time updates, and reporting dashboards."
+        ></textarea>
+        <button id="generate-plan" type="button">Build architecture plan</button>
+        <p class="hint">
+          Tip: include audience, scale, security needs, budget, and desired
+          features for more tailored recommendations.
+        </p>
+      </section>
+
+      <p class="summary" id="results-status" aria-live="polite">
+        Enter a description and generate a plan to review your architecture guidance.
+      </p>
+
+      <section class="results">
+        <article>
+          <h2>Ways to build it</h2>
+          <p class="summary" id="ways-summary">
+            Enter a description to see recommended architecture patterns.
+          </p>
+          <ul id="ways-list"></ul>
+        </article>
+
+        <article>
+          <h2>How to get it done</h2>
+          <p class="summary" id="steps-summary">
+            The planner will outline a clear implementation path.
+          </p>
+          <ul id="steps-list"></ul>
+        </article>
+
+        <article>
+          <h2>Best materials</h2>
+          <p class="summary" id="materials-summary">
+            You'll get suggested tools, platforms, and supporting materials.
+          </p>
+          <ul id="materials-list"></ul>
+        </article>
+      </section>
+    </main>
+
+    <script>
+      const textarea = document.getElementById("project-description");
+      const button = document.getElementById("generate-plan");
+
+      const waysList = document.getElementById("ways-list");
+      const stepsList = document.getElementById("steps-list");
+      const materialsList = document.getElementById("materials-list");
+
+      const waysSummary = document.getElementById("ways-summary");
+      const stepsSummary = document.getElementById("steps-summary");
+      const materialsSummary = document.getElementById("materials-summary");
+      const resultsStatus = document.getElementById("results-status");
+
+      const appendItems = (element, items) => {
+        element.innerHTML = "";
+
+        items.forEach((item) => {
+          const li = document.createElement("li");
+          li.textContent = item;
+          element.appendChild(li);
+        });
+      };
+
+      const includesAny = (text, words) => words.some((word) => text.includes(word));
+
+      const generatePlan = (description) => {
+        const text = description.trim().toLowerCase();
+        const ways = [
+          "Start with a modular web application so the user interface, business logic, and data layer can evolve independently.",
+          "Use an API-first design so mobile apps, dashboards, and future integrations can share the same backend services."
+        ];
+        const steps = [
+          "Define the core user journeys, required data, and success metrics before choosing hosting or frameworks.",
+          "Create wireframes and a small proof of concept, then validate the riskiest feature first.",
+          "Set up deployment, monitoring, and backups early so the architecture is ready for production use."
+        ];
+        const materials = [
+          "A component-based frontend framework, a documented REST or GraphQL API, and a relational database for structured data.",
+          "Version control, automated deployments, and monitoring tools so changes stay reliable as the project grows."
+        ];
+
+        if (includesAny(text, ["real-time", "realtime", "live", "chat", "instant"])) {
+          ways.push("Add an event-driven or WebSocket layer for live updates and notifications.");
+          materials.push("Real-time messaging support such as WebSockets, pub/sub infrastructure, and caching.");
+        }
+
+        if (includesAny(text, ["secure", "security", "private", "compliance", "hipaa", "gdpr"])) {
+          ways.push("Use a layered security architecture with strong authentication, role-based access control, and encrypted data flows.");
+          steps.push("Model sensitive data access, audit requirements, and threat scenarios before implementation starts.");
+          materials.push("Identity provider support, audit logging, encryption at rest, and a secrets manager.");
+        }
+
+        if (includesAny(text, ["scale", "high traffic", "many users", "global", "enterprise"])) {
+          ways.push("Plan for horizontal scaling with stateless services behind load balancing and isolated background jobs.");
+          steps.push("Separate synchronous user requests from background processing to protect performance under load.");
+          materials.push("Load balancing, managed databases, queues, and performance monitoring.");
+        }
+
+        if (includesAny(text, ["mobile", "ios", "android"])) {
+          ways.push("Keep the backend shared and expose stable APIs so web and mobile clients can move independently.");
+          materials.push("Responsive design patterns or a cross-platform mobile stack backed by the same API.");
+        }
+
+        if (includesAny(text, ["dashboard", "report", "analytics", "insights"])) {
+          ways.push("Split transactional data from analytics workloads so reporting stays fast without slowing the app.");
+          steps.push("Define which metrics need near-real-time visibility and which can be generated in scheduled reports.");
+          materials.push("Reporting components, data export support, and a warehouse or read-optimized store if analytics grow.");
+        }
+
+        if (includesAny(text, ["ai", "machine learning", "prediction", "recommendation"])) {
+          ways.push("Treat AI features as separate services so model updates do not destabilize the main application.");
+          steps.push("Create a feedback loop for prompt quality, model evaluation, and human review of high-risk outputs.");
+          materials.push("Prompt templates, evaluation datasets, and model monitoring for accuracy and cost.");
+        }
+
+        if (includesAny(text, ["budget", "cheap", "mvp", "prototype", "simple"])) {
+          ways.push("Begin with a lean monolith deployed on managed services, then break out services only when usage proves the need.");
+          steps.push("Prioritize the smallest usable release and defer advanced scaling work until you have real user feedback.");
+          materials.push("Managed hosting, serverless functions or a small app service, and off-the-shelf UI components.");
+        }
+
+        return { ways, steps, materials };
+      };
+
+      button.addEventListener("click", () => {
+        const description = textarea.value.trim();
+
+        if (!description) {
+          resultsStatus.textContent = "Please enter a project description to generate architecture guidance.";
+          waysSummary.textContent = "Please enter a project description first.";
+          stepsSummary.textContent = "Add enough detail for the planner to outline the delivery path.";
+          materialsSummary.textContent = "Once you describe the project, recommended materials will appear here.";
+          appendItems(waysList, []);
+          appendItems(stepsList, []);
+          appendItems(materialsList, []);
+          return;
+        }
+
+        const plan = generatePlan(description);
+
+        resultsStatus.textContent = "Architecture guidance generated. Review the recommended approaches, delivery steps, and materials below.";
+        waysSummary.textContent = "Recommended architecture patterns based on your project goals.";
+        stepsSummary.textContent = "A practical order for planning, building, and launching the solution.";
+        materialsSummary.textContent = "Suggested tools, platforms, and building blocks for delivery.";
+
+        appendItems(waysList, plan.ways);
+        appendItems(stepsList, plan.steps);
+        appendItems(materialsList, plan.materials);
+      });
+    </script>
+  </body>
+</html>
