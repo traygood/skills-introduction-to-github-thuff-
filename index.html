@@ -227,7 +227,9 @@
       const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       const includesAny = (text, words) =>
         words.some((word) => {
-          const pattern = new RegExp(`\\b${escapeRegExp(word).replace(/\\ /g, "\\s+")}\\b`);
+          const pattern = new RegExp(
+            `(?:^|[^a-z0-9])${escapeRegExp(word).replace(/\\ /g, "\\s+")}(?=$|[^a-z0-9])`
+          );
           return pattern.test(text);
         });
 
