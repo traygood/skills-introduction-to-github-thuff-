@@ -95,7 +95,7 @@
       }
 
       button:focus-visible {
-        outline: 3px solid #93c5fd;
+        outline: 3px solid var(--accent);
         outline-offset: 3px;
       }
 
@@ -224,7 +224,12 @@
         });
       };
 
-      const includesAny = (text, words) => words.some((word) => text.includes(word));
+      const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const includesAny = (text, words) =>
+        words.some((word) => {
+          const pattern = new RegExp(`\\b${escapeRegExp(word).replace(/\\ /g, "\\s+")}\\b`);
+          return pattern.test(text);
+        });
 
       const generatePlan = (description) => {
         const text = description.trim().toLowerCase();
